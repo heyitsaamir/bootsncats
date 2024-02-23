@@ -47,24 +47,26 @@ interface SoundAtBeat {
   sound: string;
 }
 
+const soundsForSprite = {
+  kick: [0, 350] as [number, number],
+  hihat: [374, 160] as [number, number],
+  snare: [666, 290] as [number, number],
+  cowbell: [968, 200] as [number, number],
+};
+
 export default function Home() {
   const { beat, reset } = useBeats(600);
   const [sounds, setSounds] = useState<SoundAtBeat[]>([]);
   const [mode, setMode] = useState<"record" | "playback" | null>(null);
   const [playBackIndex, setPlaybackIndex] = useState(0);
   const [play] = useSound(soundUrl, {
-    sprite: {
-      kick: [0, 350],
-      hihat: [374, 160],
-      snare: [666, 290],
-      cowbell: [968, 200],
-    },
+    sprite: soundsForSprite,
   });
 
   const updateMode = (newMode: typeof mode) => {
-    // if (newMode === mode) {
-    //   return;
-    // }
+    if (newMode === mode) {
+      return;
+    }
 
     switch (newMode) {
       case "record":
@@ -114,12 +116,67 @@ export default function Home() {
       setPlaybackIndex(i);
     }
   }, [beat, mode]);
+  const lineRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (lineRef.current) {
+      lineRef.current.style.left = `${beat}px`;
+    }
+  }, [beat]);
+
+  const soundTypes = Object.keys(soundsForSprite);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      {beat}
       {mode}
-      {JSON.stringify(sounds)}
+      <div
+        style={{
+          position: "relative",
+          height: "100px",
+          width: "100%",
+          border: "1px solid white",
+        }}
+      >
+        <div
+          ref={lineRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: "1px",
+            background: "#fda4af",
+            boxShadow: "0 0 5px #fda4af, 0 0 5px #fda4af",
+          }}
+        />
+        {soundTypes.map((sound, index) => (
+          <div
+            key={index}
+            style={{
+              height: "25px",
+              border: "1px solid gray",
+              color: "#64748b",
+            }}
+          >
+            {sound}
+          </div>
+        ))}
+        {sounds.map((sound, index) => {
+          return (
+            <div
+              key={index}
+              style={{
+                position: "absolute",
+                left: `${sound.beat}px`,
+                top: soundTypes.indexOf(sound.sound) * 25,
+                height: "25px",
+                width: "1px",
+                background: "#93c5fd",
+                boxShadow: "0 0 5px #93c5fd, 0 0 5px #93c5fd",
+              }}
+            />
+          );
+        })}
+      </div>
       <div className="flex justify-center space-x-4">
         <button
           className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
